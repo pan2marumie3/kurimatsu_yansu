@@ -1,0 +1,197 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>でやんす辞表ジェネレーター</title>
+  <style>
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+    textarea {
+      width: 90%;
+      height: 300px;
+      padding: 1rem;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin-top: 1rem;
+      resize: vertical;
+    }
+    .input-group {
+      margin: 1rem 0;
+      width: 70%;
+      display: block;
+      text-align: left;
+      position: relative;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    .input-wrapper {
+      display: flex;
+      width: 100%;
+    }
+    .input-wrapper input {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 8px 0 0 8px;
+      font-size: 1rem;
+    }
+    .dropdown-button {
+      width: 2.5rem;
+      height: 2.5rem;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 0 8px 8px 0;
+      cursor: pointer;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 0 0 8px 8px;
+      max-height: 150px;
+      overflow-y: auto;
+      display: none;
+      z-index: 10;
+    }
+    .dropdown-menu div {
+      padding: 0.5rem;
+      cursor: pointer;
+    }
+    .dropdown-menu div:hover {
+      background-color: #f0f0f0;
+    }
+    button.action {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 10px;
+      background-color: #007bff;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button.action:hover {
+      background-color: #0056b3;
+    }
+    @media (max-width: 600px) {
+      .input-wrapper {
+        flex-direction: row;
+      }
+      .input-wrapper input {
+        border-radius: 8px 0 0 8px;
+      }
+      .dropdown-button {
+        border-radius: 0 8px 8px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>でやんす辞表ジェネレーター</h1>  <div class="input-group">
+    <label for="boss">上司名：</label>
+    <div class="input-wrapper">
+      <input type="text" id="boss" placeholder="例：キャプテン" oninput="generateText()">
+      <button class="dropdown-button" onclick="toggleDropdown('bossMenu')">▼</button>
+    </div>
+    <div class="dropdown-menu" id="bossMenu"></div>
+  </div>  <div class="input-group">
+    <label for="group">対象（会社・チームなど）：</label>
+    <div class="input-wrapper">
+      <input type="text" id="group" placeholder="例：チーム" oninput="generateText()">
+      <button class="dropdown-button" onclick="toggleDropdown('groupMenu')">▼</button>
+    </div>
+    <div class="dropdown-menu" id="groupMenu"></div>
+  </div>  <div class="input-group">
+    <label for="reason">理由：</label>
+    <div class="input-wrapper">
+      <input type="text" id="reason" placeholder="例：いくら練習やっても、エイリア学園にはかなわないでやんす。" oninput="generateText()">
+      <button class="dropdown-button" onclick="toggleDropdown('reasonMenu')">▼</button>
+    </div>
+    <div class="dropdown-menu" id="reasonMenu"></div>
+  </div><button class="action" onclick="gachaAll()">ガチャでやんす！</button> <button class="action" onclick="copyText()">コピーでやんす！</button>
+
+  <textarea id="output"></textarea>  <script>
+    const bossList = ['キャプテン', '社長', 'プロデューサー', '先生', '隊長', 'マスター', '先輩', '課長', '日野社長'];
+    const groupList = ['チーム', '会社', 'ギルド', 'サークル', '部活', 'プロジェクト', '同盟', '雷門中', 'イナズマジャパン'];
+    const reasonList = [
+      'いくら練習やっても、エイリア学園にはかなわないでやんす。',
+      'いくら働いても、給料は上がらないでやんす。',
+      'いくら課金しても、SSRは出ないでやんす。',
+      'いくら走っても、マラソンは終わらないでやんす。',
+      'いくら努力しても、上には上がいるでやんす。',
+      'いくら周回しても、上位勢には敵わないでやんす。'
+    ];
+
+    function populateMenu(menuId, items, inputId) {
+      const menu = document.getElementById(menuId);
+      menu.innerHTML = '';
+      items.forEach(item => {
+        const div = document.createElement('div');
+        div.textContent = item;
+        div.onclick = () => {
+          document.getElementById(inputId).value = item;
+          generateText();
+          menu.style.display = 'none';
+        };
+        menu.appendChild(div);
+      });
+    }
+
+    function toggleDropdown(menuId) {
+      const menu = document.getElementById(menuId);
+      menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+    }
+
+    populateMenu('bossMenu', bossList, 'boss');
+    populateMenu('groupMenu', groupList, 'group');
+    populateMenu('reasonMenu', reasonList, 'reason');
+
+    function randomPick(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function gachaAll() {
+      document.getElementById('boss').value = randomPick(bossList);
+      document.getElementById('group').value = randomPick(groupList);
+      document.getElementById('reason').value = randomPick(reasonList);
+      generateText();
+    }
+
+    function generateText() {
+      const boss = document.getElementById('boss').value || 'キャプテン';
+      const group = document.getElementById('group').value || 'チーム';
+      const reason = document.getElementById('reason').value || 'いくら練習やっても、エイリア学園にはかなわないでやんす。';
+
+      const output = `${boss}\nみなさん\nオレも${group}、離れるでやんす。\n風丸さんが言ってた通りでやんす。\n\n${reason}\n\nもし、その努力が報われたとしてもまた新しい${group}が現れるかもしれない。キリがないでやんす。\n\n自分、もう限界でやんす。\n\nすみません。\n\n${boss}\n\n今までありがとうございましたでやんす。`;
+
+      document.getElementById('output').value = output;
+    }
+
+    function copyText() {
+      const text = document.getElementById('output').value;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('コピーしたでやんす！');
+      });
+    }
+
+    window.onload = generateText;
+  </script></body>
+</html>
